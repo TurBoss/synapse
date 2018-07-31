@@ -10,9 +10,6 @@ before_script:
 
 matrix:
   fast_finish: true
-  allow_failures:
-    - python: 2.7
-      env: TOX_ENV=py27-postgres
   include:
   - python: 2.7
     env: TOX_ENV=packaging
@@ -23,6 +20,9 @@ matrix:
   - python: 2.7
     env: TOX_ENV=py27
 
+  - python: 2.7
+    env: TOX_ENV=py27-postgres
+
   - python: 3.6
     env: TOX_ENV=py36
 
@@ -31,6 +31,10 @@ matrix:
 
   - python: 3.6
     env: TOX_ENV=check-newsfragment
+
+  allow_failures:
+  - python: 2.7
+    env: TOX_ENV=py27-postgres
 
 install:
   - pip install tox
