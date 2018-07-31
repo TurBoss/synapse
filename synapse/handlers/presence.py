@@ -231,8 +231,8 @@ class PresenceHandler(object):
         earlier than they should when synapse is restarted. This affect of this
         is some spurious presence changes that will self-correct.
         """
-        # Database isn't running, quit out
-        if self.hs.get_db_pool().running == False:
+        # If the DB pool has already terminated, don't try updating
+        if not self.hs.get_db_pool().running:
             return
 
         logger.info(

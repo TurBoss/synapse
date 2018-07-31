@@ -13,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import hashlib
+import os
 from inspect import getcallargs
 
 from mock import Mock, patch
@@ -28,7 +28,11 @@ from synapse.http.server import HttpServer
 from synapse.server import HomeServer
 from synapse.storage import PostgresEngine
 from synapse.storage.engines import create_engine
-from synapse.storage.prepare_database import prepare_database, _setup_new_database, _get_or_create_schema_state
+from synapse.storage.prepare_database import (
+    _get_or_create_schema_state,
+    _setup_new_database,
+    prepare_database,
+)
 from synapse.util.logcontext import LoggingContext
 from synapse.util.ratelimitutils import FederationRateLimiter
 
@@ -136,13 +140,15 @@ def setup_test_homeserver(name="test", datastore=None, config=None, reactor=None
                 "database": ":memory:",
                 "cp_min": 1,
                 "cp_max": 1,
+                "check_same_thread": False
             },
         }
 
     db_engine = create_engine(config.database_config)
 
+    # Create the database before we actually try and connect to it, based off
+    # the template database we generate in setupdb()
     if datastore is None and isinstance(db_engine, PostgresEngine):
-        db_engine_base = create_engine(config.database_config)
         db_conn = db_engine.module.connect("dbname=synapse_base")
         db_conn.autocommit = True
         cur = db_conn.cursor()
@@ -151,7 +157,6 @@ def setup_test_homeserver(name="test", datastore=None, config=None, reactor=None
         db_conn.commit()
         cur.close()
         db_conn.close()
-
 
     # we need to configure the connection pool to run the on_new_connection
     # function, so that we can test code that uses custom sqlite functions
@@ -170,12 +175,14 @@ def setup_test_homeserver(name="test", datastore=None, config=None, reactor=None
             **kargs
         )
 
-        # Prepare the DB on SQLite
+        # Prepare the DB on SQLite -- PostgreSQL is a copy of an already up to
+        # date db
         if not isinstance(db_engine, PostgresEngine):
             db_conn = hs.get_db_conn()
             yield prepare_database(db_conn, db_engine, config)
             db_conn.commit()
             db_conn.close()
+
         hs.setup()
     else:
         hs = HomeServer(

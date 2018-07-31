@@ -95,8 +95,8 @@ class ClientIpStore(background_updates.BackgroundUpdateStore):
 
     def _update_client_ips_batch(self):
 
-        # If the DB pool has already terminated, don't try
-        if self.hs.get_db_pool().running == False:
+        # If the DB pool has already terminated, don't try updating
+        if not self.hs.get_db_pool().running:
             return
 
         def update():
