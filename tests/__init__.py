@@ -13,9 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import utils
-
 from twisted.trial import util
+
+from tests import utils
 
 util.DEFAULT_TIMEOUT_DURATION = 10
 utils.setupdb()
