@@ -28,7 +28,7 @@ from synapse.http.server import HttpServer
 from synapse.server import HomeServer
 from synapse.storage import PostgresEngine
 from synapse.storage.engines import create_engine
-from synapse.storage.prepare_database import prepare_database
+from synapse.storage.prepare_database import prepare_database, _setup_new_database, _get_or_create_schema_state
 from synapse.util.logcontext import LoggingContext
 from synapse.util.ratelimitutils import FederationRateLimiter
 
@@ -36,6 +36,41 @@ from synapse.util.ratelimitutils import FederationRateLimiter
 # It requires you to have a local postgres database called synapse_test, within
 # which ALL TABLES WILL BE DROPPED
 USE_POSTGRES_FOR_TESTS = os.environ.get("SYNAPSE_POSTGRES", False)
+
+
+def setupdb():
+
+    # If we're using PostgreSQL, set up the db once
+    if USE_POSTGRES_FOR_TESTS:
+        pgconfig = {
+                "name": "psycopg2",
+                "args": {
+                    "database": "synapse_base",
+                    "cp_min": 1,
+                    "cp_max": 5,
+                },
+            }
+        config = Mock()
+        config.password_providers = []
+        config.database_config = pgconfig
+        db_engine = create_engine(pgconfig)
+        db_conn = db_engine.module.connect("")
+        db_conn.autocommit = True
+        cur = db_conn.cursor()
+        cur.execute("DROP DATABASE IF EXISTS synapse_base;")
+        cur.execute("CREATE DATABASE synapse_base;")
+        db_conn.commit()
+        cur.close()
+        db_conn.close()
+
+        # Set up in the db
+        db_conn = db_engine.module.connect("dbname=synapse_base")
+        cur = db_conn.cursor()
+        _get_or_create_schema_state(cur, db_engine)
+        _setup_new_database(cur, db_engine)
+        db_conn.commit()
+        cur.close()
+        db_conn.close()
 
 
 @defer.inlineCallbacks
@@ -106,6 +141,18 @@ def setup_test_homeserver(name="test", datastore=None, config=None, reactor=None
 
     db_engine = create_engine(config.database_config)
 
+    if datastore is None and isinstance(db_engine, PostgresEngine):
+        db_engine_base = create_engine(config.database_config)
+        db_conn = db_engine.module.connect("dbname=synapse_base")
+        db_conn.autocommit = True
+        cur = db_conn.cursor()
+        cur.execute("DROP DATABASE IF EXISTS synapse_test;")
+        cur.execute("CREATE DATABASE synapse_test WITH TEMPLATE synapse_base;")
+        db_conn.commit()
+        cur.close()
+        db_conn.close()
+
+
     # we need to configure the connection pool to run the on_new_connection
     # function, so that we can test code that uses custom sqlite functions
     # (like rank).
@@ -122,16 +169,13 @@ def setup_test_homeserver(name="test", datastore=None, config=None, reactor=None
             reactor=reactor,
             **kargs
         )
-        db_conn = hs.get_db_conn()
-        # make sure that the database is empty
-        if isinstance(db_engine, PostgresEngine):
-            from psycopg2.sql import Identifier, SQL
-            cur = db_conn.cursor()
-            cur.execute("DROP SCHEMA public CASCADE;")
-            cur.execute("CREATE SCHEMA public;")
-        yield prepare_database(db_conn, db_engine, config)
-        db_conn.commit()
-        db_conn.close()
+
+        # Prepare the DB on SQLite
+        if not isinstance(db_engine, PostgresEngine):
+            db_conn = hs.get_db_conn()
+            yield prepare_database(db_conn, db_engine, config)
+            db_conn.commit()
+            db_conn.close()
         hs.setup()
     else:
         hs = HomeServer(
