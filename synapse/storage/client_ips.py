@@ -94,6 +94,11 @@ class ClientIpStore(background_updates.BackgroundUpdateStore):
         self._batch_row_update[key] = (user_agent, device_id, now)
 
     def _update_client_ips_batch(self):
+
+        # If the DB pool has already terminated, don't try
+        if self.hs.get_db_pool.running == False:
+            return
+
         def update():
             to_update = self._batch_row_update
             self._batch_row_update = {}
