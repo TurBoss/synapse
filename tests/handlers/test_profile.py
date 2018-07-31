@@ -71,6 +71,7 @@ class ProfileTestCase(unittest.TestCase):
         yield self.store.create_profile(self.frank.localpart)
 
         self.handler = hs.get_profile_handler()
+        self.addCleanup(hs.get_db_pool().close)
 
     @defer.inlineCallbacks
     def test_get_my_name(self):

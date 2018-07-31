@@ -70,6 +70,8 @@ class KeyringTestCase(unittest.TestCase):
                 self.mock_perspective_server.get_verify_keys()
         }
 
+        self.addCleanup(self.hs.get_db_pool().close)
+
     def check_context(self, _, expected):
         self.assertEquals(
             getattr(LoggingContext.current_context(), "request", None),

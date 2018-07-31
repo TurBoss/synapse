@@ -38,6 +38,7 @@ class E2eKeysHandlerTestCase(unittest.TestCase):
             federation_client=mock.Mock(),
         )
         self.handler = synapse.handlers.e2e_keys.E2eKeysHandler(self.hs)
+        self.addCleanup(self.hs.get_db_pool().close)
 
     @defer.inlineCallbacks
     def test_query_local_devices_no_devices(self):

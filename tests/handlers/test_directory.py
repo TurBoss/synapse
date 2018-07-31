@@ -59,6 +59,7 @@ class DirectoryTestCase(unittest.TestCase):
         self.my_room = RoomAlias.from_string("#my-room:test")
         self.your_room = RoomAlias.from_string("#your-room:test")
         self.remote_room = RoomAlias.from_string("#another:remote")
+        self.addCleanup(hs.get_db_pool().close)
 
     @defer.inlineCallbacks
     def test_get_local_association(self):

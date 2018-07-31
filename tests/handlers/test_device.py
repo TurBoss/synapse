@@ -38,6 +38,7 @@ class DeviceTestCase(unittest.TestCase):
         self.handler = hs.get_device_handler()
         self.store = hs.get_datastore()
         self.clock = hs.get_clock()
+        self.addCleanup(hs.get_db_pool().close)
 
     @defer.inlineCallbacks
     def test_device_is_created_if_doesnt_exist(self):

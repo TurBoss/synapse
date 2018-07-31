@@ -55,6 +55,7 @@ class FilteringTestCase(unittest.TestCase):
         self.filtering = hs.get_filtering()
 
         self.datastore = hs.get_datastore()
+        self.addCleanup(hs.get_db_pool().close)
 
     def test_errors_on_invalid_filters(self):
         invalid_filters = [
