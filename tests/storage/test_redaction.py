@@ -33,6 +33,7 @@ class RedactionTestCase(unittest.TestCase):
             resource_for_federation=Mock(),
             http_client=None,
         )
+        self.addCleanup(hs.get_db_pool().close)
 
         self.store = hs.get_datastore()
         self.event_builder_factory = hs.get_event_builder_factory()

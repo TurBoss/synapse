@@ -58,6 +58,7 @@ class ProfileTestCase(unittest.TestCase):
         hs.get_auth().get_user_by_req = _get_user_by_req
 
         profile.register_servlets(hs, self.mock_resource)
+        self.addCleanup(hs.get_db_pool().close)
 
     @defer.inlineCallbacks
     def test_get_my_name(self):

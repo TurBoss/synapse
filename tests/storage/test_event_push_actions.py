@@ -33,6 +33,7 @@ class EventPushActionsStoreTestCase(tests.unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         hs = yield tests.utils.setup_test_homeserver()
+        self.addCleanup(hs.get_db_pool().close)
         self.store = hs.get_datastore()
 
     @defer.inlineCallbacks

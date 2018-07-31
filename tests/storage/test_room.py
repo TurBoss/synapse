@@ -28,6 +28,7 @@ class RoomStoreTestCase(unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         hs = yield setup_test_homeserver()
+        self.addCleanup(hs.get_db_pool().close)
 
         # We can't test RoomStore on its own without the DirectoryStore, for
         # management of the 'room_aliases' table

@@ -63,6 +63,7 @@ class ApplicationServiceStoreTestCase(unittest.TestCase):
         self._add_appservice("token3", "as3", "some_url", "some_hs_token", "bob")
         # must be done after inserts
         self.store = ApplicationServiceStore(None, hs)
+        self.addCleanup(hs.get_db_pool().close)
 
     def tearDown(self):
         # TODO: suboptimal that we need to create files for tests!
@@ -126,6 +127,7 @@ class ApplicationServiceTransactionStoreTestCase(unittest.TestCase):
             federation_client=Mock(),
         )
         self.db_pool = hs.get_db_pool()
+        self.addCleanup(hs.get_db_pool().close)
 
         self.as_list = [
             {

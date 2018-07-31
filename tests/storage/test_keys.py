@@ -30,6 +30,7 @@ class KeyStoreTestCase(tests.unittest.TestCase):
     def setUp(self):
         hs = yield tests.utils.setup_test_homeserver()
         self.store = hs.get_datastore()
+        self.addCleanup(hs.get_db_pool().close)
 
     @defer.inlineCallbacks
     def test_get_server_verify_keys(self):

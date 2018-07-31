@@ -33,6 +33,7 @@ class RoomMemberStoreTestCase(unittest.TestCase):
             resource_for_federation=Mock(),
             http_client=None,
         )
+        self.addCleanup(hs.get_db_pool().close)
         # We can't test the RoomMemberStore on its own without the other event
         # storage logic
         self.store = hs.get_datastore()

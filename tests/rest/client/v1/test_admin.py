@@ -61,6 +61,7 @@ class UserRegisterTestCase(unittest.TestCase):
 
         self.resource = JsonResource(self.hs)
         register_servlets(self.hs, self.resource)
+        self.addCleanup(self.hs.get_db_pool().close)
 
     def test_disabled(self):
         """

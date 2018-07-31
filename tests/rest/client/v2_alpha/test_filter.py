@@ -45,6 +45,7 @@ class FilterTestCase(unittest.TestCase):
         self.hs = setup_test_homeserver(
             http_client=None, clock=self.hs_clock, reactor=self.clock
         )
+        self.addCleanup(self.hs.get_db_pool().close)
 
         self.auth = self.hs.get_auth()
 

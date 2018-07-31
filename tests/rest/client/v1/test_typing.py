@@ -52,6 +52,7 @@ class RoomTypingTestCase(RestTestCase):
             ]),
         )
         self.hs = hs
+        self.addCleanup(self.hs.get_db_pool().close)
 
         self.event_source = hs.get_event_sources().sources["typing"]
 

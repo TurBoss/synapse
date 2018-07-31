@@ -87,6 +87,7 @@ class RoomBase(unittest.TestCase):
         synapse.rest.client.v1.room.register_servlets(self.hs, self.resource)
         synapse.rest.client.v1.room.register_deprecated_servlets(self.hs, self.resource)
         self.helper = RestHelper(self.hs, self.resource, self.user_id)
+        self.addCleanup(self.hs.get_db_pool().close)
 
 
 class RoomPermissionsTestCase(RoomBase):

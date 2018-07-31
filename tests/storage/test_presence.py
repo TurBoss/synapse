@@ -28,6 +28,7 @@ class PresenceStoreTestCase(unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         hs = yield setup_test_homeserver(clock=MockClock())
+        self.addCleanup(hs.get_db_pool().close)
 
         self.store = PresenceStore(None, hs)
 

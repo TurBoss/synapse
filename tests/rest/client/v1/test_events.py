@@ -70,6 +70,7 @@ class EventStreamPermissionsTestCase(RestTestCase):
         response = yield self.register(self.other_user)
         self.other_token = response["access_token"]
         self.other_user = response["user_id"]
+        self.addCleanup(hs.get_db_pool().close)
 
     def tearDown(self):
         pass

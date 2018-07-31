@@ -30,6 +30,7 @@ class ClientIpStoreTestCase(tests.unittest.TestCase):
         hs = yield tests.utils.setup_test_homeserver()
         self.store = hs.get_datastore()
         self.clock = hs.get_clock()
+        self.addCleanup(hs.get_db_pool().close)
 
     @defer.inlineCallbacks
     def test_insert_new_client_ip(self):

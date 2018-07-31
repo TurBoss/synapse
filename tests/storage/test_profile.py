@@ -28,6 +28,7 @@ class ProfileStoreTestCase(unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         hs = yield setup_test_homeserver()
+        self.addCleanup(hs.get_db_pool().close)
 
         self.store = ProfileStore(None, hs)
 

@@ -80,6 +80,7 @@ class BaseSlavedStoreTestCase(unittest.TestCase):
         client_connector = reactor.connectUNIX(path, client_factory)
         self.addCleanup(client_factory.stopTrying)
         self.addCleanup(client_connector.disconnect)
+        self.addCleanup(self.hs.get_db_pool().close)
 
     def replicate(self):
         """Tell the master side of replication that something has happened, and then

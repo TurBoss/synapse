@@ -20,6 +20,7 @@ class MessageAcceptTests(unittest.TestCase):
         self.homeserver = setup_test_homeserver(
             http_client=self.http_client, clock=self.hs_clock, reactor=self.reactor
         )
+        self.addCleanup(self.homeserver.get_db_pool().close)
 
         user_id = UserID("us", "test")
         our_user = Requester(user_id, None, False, None, None)
