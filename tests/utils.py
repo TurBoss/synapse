@@ -70,7 +70,8 @@ def setupdb():
         db_conn.close()
 
         # Set up in the db
-        db_conn = db_engine.module.connect("dbname=synapse_base user=%s" % (POSTGRES_USER,))
+        db_conn = db_engine.module.connect(
+            "dbname=synapse_base user=%s" % (POSTGRES_USER,))
         cur = db_conn.cursor()
         _get_or_create_schema_state(cur, db_engine)
         _setup_new_database(cur, db_engine)
@@ -152,7 +153,8 @@ def setup_test_homeserver(name="test", datastore=None, config=None, reactor=None
     # Create the database before we actually try and connect to it, based off
     # the template database we generate in setupdb()
     if datastore is None and isinstance(db_engine, PostgresEngine):
-        db_conn = db_engine.module.connect("dbname=synapse_base user=%s" % (POSTGRES_USER,))
+        db_conn = db_engine.module.connect(
+            "dbname=synapse_base user=%s" % (POSTGRES_USER,))
         db_conn.autocommit = True
         cur = db_conn.cursor()
         cur.execute("DROP DATABASE IF EXISTS synapse_test;")
