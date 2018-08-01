@@ -40,6 +40,7 @@ from synapse.util.ratelimitutils import FederationRateLimiter
 # It requires you to have a local postgres database called synapse_test, within
 # which ALL TABLES WILL BE DROPPED
 USE_POSTGRES_FOR_TESTS = os.environ.get("SYNAPSE_POSTGRES", False)
+POSTGRES_USER = os.environ.get("SYNAPSE_POSTGRES_USER", "postgres")
 
 
 def setupdb():
@@ -50,6 +51,7 @@ def setupdb():
                 "name": "psycopg2",
                 "args": {
                     "database": "synapse_base",
+                    "user": POSTGRES_USER,
                     "cp_min": 1,
                     "cp_max": 5,
                 },
@@ -58,7 +60,7 @@ def setupdb():
         config.password_providers = []
         config.database_config = pgconfig
         db_engine = create_engine(pgconfig)
-        db_conn = db_engine.module.connect("")
+        db_conn = db_engine.module.connect("user=%s" % (POSTGRES_USER,))
         db_conn.autocommit = True
         cur = db_conn.cursor()
         cur.execute("DROP DATABASE IF EXISTS synapse_base;")
@@ -68,7 +70,7 @@ def setupdb():
         db_conn.close()
 
         # Set up in the db
-        db_conn = db_engine.module.connect("dbname=synapse_base")
+        db_conn = db_engine.module.connect("dbname=synapse_base user=%s" % (POSTGRES_USER,))
         cur = db_conn.cursor()
         _get_or_create_schema_state(cur, db_engine)
         _setup_new_database(cur, db_engine)
@@ -129,6 +131,7 @@ def setup_test_homeserver(name="test", datastore=None, config=None, reactor=None
             "name": "psycopg2",
             "args": {
                 "database": "synapse_test",
+                "user": POSTGRES_USER,
                 "cp_min": 1,
                 "cp_max": 5,
             },
@@ -149,7 +152,7 @@ def setup_test_homeserver(name="test", datastore=None, config=None, reactor=None
     # Create the database before we actually try and connect to it, based off
     # the template database we generate in setupdb()
     if datastore is None and isinstance(db_engine, PostgresEngine):
-        db_conn = db_engine.module.connect("dbname=synapse_base")
+        db_conn = db_engine.module.connect("dbname=synapse_base user=%s" % (POSTGRES_USER,))
         db_conn.autocommit = True
         cur = db_conn.cursor()
         cur.execute("DROP DATABASE IF EXISTS synapse_test;")
