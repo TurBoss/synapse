@@ -19,6 +19,7 @@ from twisted.internet import defer
 
 from synapse.api.errors import AuthError, CodeMessageException, SynapseError
 from synapse.metrics.background_process_metrics import run_as_background_process
+from synapse.replication.http.profile import ReplicationHandleProfileChangeRestServlet
 from synapse.types import UserID, get_domain_from_id
 
 from ._base import BaseHandler
@@ -44,6 +45,10 @@ class ProfileHandler(BaseHandler):
             self.clock.looping_call(
                 self._start_update_remote_profile_cache, self.PROFILE_UPDATE_MS,
             )
+
+        self._notify_master_profile_change = (
+            ReplicationHandleProfileChangeRestServlet.make_client(hs)
+        )
 
     @defer.inlineCallbacks
     def get_profile(self, user_id):
@@ -147,10 +152,16 @@ class ProfileHandler(BaseHandler):
         )
 
         if self.hs.config.user_directory_search_all_users:
-            profile = yield self.store.get_profileinfo(target_user.localpart)
-            yield self.user_directory_handler.handle_local_profile_change(
-                target_user.to_string(), profile
-            )
+            if self.hs.config.worker_app is None:
+                profile = yield self.store.get_profileinfo(target_user.localpart)
+                yield self.user_directory_handler.handle_local_profile_change(
+                    target_user.to_string(), profile
+                )
+            else:
+                yield self._notify_master_profile_change(
+                    requester=requester,
+                    user_id=target_user.to_string(),
+                )
 
         yield self._update_join_states(requester, target_user)
 
@@ -196,10 +207,15 @@ class ProfileHandler(BaseHandler):
             target_user.localpart, new_avatar_url
         )
 
-        if self.hs.config.user_directory_search_all_users:
+        if self.hs.config.worker_app is None:
             profile = yield self.store.get_profileinfo(target_user.localpart)
             yield self.user_directory_handler.handle_local_profile_change(
                 target_user.to_string(), profile
+            )
+        else:
+            yield self._notify_master_profile_change(
+                requester=requester,
+                user_id=target_user.to_string(),
             )
 
         yield self._update_join_states(requester, target_user)
@@ -231,7 +247,7 @@ class ProfileHandler(BaseHandler):
         if not self.hs.is_mine(target_user):
             return
 
-        yield self.ratelimit(requester)
+        # yield self.ratelimit(requester)
 
         room_ids = yield self.store.get_rooms_for_user(
             target_user.to_string(),
